@@ -5,3 +5,4 @@ local external_stigma_p = "QNQSTGprox01 QNQSTGprox02 QNQSTGprox05 QNQSTGprox08 Q
 local date_vars = "survey_start_date birthdate birthdate_year"
 
 local diseases = "Acne AlopeciaHairLoss AtopicDermatitisEczemaDermatitis BirthmarkHemangioma DermatomyositisLupus EpidermolysisBullosa HidradenitisSuppurativa Hyperhidrosis Ichthyosis Impetigo KeloidBurnScarOtherWound Keratosispilaris Lichensclerosus Molluscum MorpheaScleroderma Nevusandotherbenignskintumorsgrowths Otherskincondition Pityrosporumfolliculitis Psoriasis Vascularmalformation VitiligoPigmentationDisorder Warts"
+
