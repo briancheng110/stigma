@@ -1,0 +1,7 @@
+local internal_stigma_c = "NQSTGped04c NQSTGped07c NQSTGped17c NQSTGped19c NQSTGped09c NQSTGped11c NQSTGped14c NQSTGped15c QDermSTGped03 QDermSTGped04 QDermSTGped08"
+local external_stigma_c = "NQSTGped01c NQSTGped02c NQSTGped03c NQSTGped05c NQSTGped06c NQSTGped08c  NQSTGped10c NQSTGped20c QDermSTGped01 QDermSTGped02  QNQSTGped07"
+local internal_stigma_p = "QNQSTGprox17 QNQSTGprox19 QNQSTGprox09 QNQSTGprox11 QNQSTGprox14 QNQSTGprox15 QDermSTGprox03 QDermSTGprox04 QDermSTGprox08 QNQSTGprox07"
+local external_stigma_p = "QNQSTGprox01 QNQSTGprox02 QNQSTGprox05 QNQSTGprox08 QDermSTGprox01 QDermSTGprox02 QNQSTGprox20 QNQSTGprox03 QNQSTGprox04 QNQSTGprox06 QNQSTGprox10 QDermSTGprox07"
+local date_vars = "survey_start_date birthdate birthdate_year"
+
+local diseases = "Acne AlopeciaHairLoss AtopicDermatitisEczemaDermatitis BirthmarkHemangioma DermatomyositisLupus EpidermolysisBullosa HidradenitisSuppurativa Hyperhidrosis Ichthyosis Impetigo KeloidBurnScarOtherWound Keratosispilaris Lichensclerosus Molluscum MorpheaScleroderma Nevusandotherbenignskintumorsgrowths Otherskincondition Pityrosporumfolliculitis Psoriasis Vascularmalformation VitiligoPigmentationDisorder Warts"
