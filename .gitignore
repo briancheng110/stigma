@@ -1,0 +1,8 @@
+# Ignore CSV files
+*.csv
+
+# Ignore XLSX files
+*.xlsx
+
+# Ignore DTA files
+*.dta
