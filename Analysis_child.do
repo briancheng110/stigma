@@ -1,5 +1,6 @@
 cd "C:\Users\Brian\Documents\Stigma\"
 include "Header.do"
+local HIGH_STIGMA = 50
 //-----------------------------------
 
 //convert to stata format for merging
@@ -10,8 +11,9 @@ import delimited using "scored_external_child.csv", clear varnames(5)
 save scored_external_child, replace
 
 //open the original file
+//skin problem 1 is the primary condition that is used to categorize
 import excel using "C:\Users\Brian\Documents\Stigma\raw.xlsx", sheet("All Data") firstrow clear
-keep id skindiseasebuckets `date_vars' gender
+keep id skindiseasebuckets skin_problem_1 skin_problem_1_visible `date_vars' gender 
 
 //clean the names of diseases
 //remove white space and slashses
@@ -76,6 +78,24 @@ disp r(p)
 // stats by sex
 ranksum tscore if gender == "female", by(type)
 ranksum tscore if gender == "male", by(type)
+
+// Assign numeric codes based on string values
+// by default, will assign semi-visible = 1 and invisible = 2. swap these
+egen visible_code = group(skin_problem_1_visible)
+replace visible_code = 1 if skin_problem_1_visible == "Not visible"
+replace visible_code = 2 if skin_problem_1_visible == "Barely covered by clothing"
+
+//generate var for high stigma
+gen high_stigma = 1 if tscore > `HIGH_STIGMA'
+replace high_stigma = 0 if high_stigma == .
+
+//generate numberical code for male
+gen male = 1 if gender == "male"
+replace male = 0 if male == .
+
+logit high_stigma i.age_group i.visible_code i.male if type == "External_c"
+logit high_stigma i.age_group i.visible_code i.male if type == "Internal_c"
+
 
 save child, replace
 
