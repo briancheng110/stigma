@@ -1,6 +1,6 @@
 cd "C:\Users\Brian\Documents\Stigma\"
 include "Header.do"
-local HIGH_STIGMA = 50
+local HIGH_STIGMA = 55
 //-----------------------------------
 
 //convert to stata format for merging
@@ -13,7 +13,7 @@ save scored_external_child, replace
 //open the original file
 //skin problem 1 is the primary condition that is used to categorize
 import excel using "C:\Users\Brian\Documents\Stigma\raw.xlsx", sheet("All Data") firstrow clear
-keep id skindiseasebuckets skin_problem_1 skin_problem_1_visible `date_vars' gender 
+keep id race skindiseasebuckets skin_problem_1 skin_problem_1_visible `date_vars' gender 
 
 //clean the names of diseases
 //remove white space and slashses
@@ -85,6 +85,11 @@ egen visible_code = group(skin_problem_1_visible)
 replace visible_code = 1 if skin_problem_1_visible == "Not visible"
 replace visible_code = 2 if skin_problem_1_visible == "Barely covered by clothing"
 
+// Assign numberic codes for race
+// Split is white v not white
+gen white = 1 if race == "White"
+replace white = 0 if white == .
+
 //generate var for high stigma
 gen high_stigma = 1 if tscore > `HIGH_STIGMA'
 replace high_stigma = 0 if high_stigma == .
@@ -93,8 +98,8 @@ replace high_stigma = 0 if high_stigma == .
 gen male = 1 if gender == "male"
 replace male = 0 if male == .
 
-logit high_stigma i.age_group i.visible_code i.male if type == "External_c"
-logit high_stigma i.age_group i.visible_code i.male if type == "Internal_c"
+logit high_stigma i.age_group i.visible_code i.male i.white if type == "External_c"
+logit high_stigma i.age_group i.visible_code i.male i.white if type == "Internal_c"
 
 
 save child, replace
