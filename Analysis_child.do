@@ -101,6 +101,9 @@ replace male = 0 if male == .
 logit high_stigma i.age_group i.visible_code i.male i.white if type == "External_c"
 logit high_stigma i.age_group i.visible_code i.male i.white if type == "Internal_c"
 
+ren pin id
+merge 1:1 id using tscores
+
 
 save child, replace
 
