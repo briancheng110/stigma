@@ -1,8 +1,8 @@
 // Define the questions for each survey
 
 // List of all survey set names
-local survey_list = "promis_peer_rel_p promis_anxiety_p promis_depression_p external_stigma_p internal_stigma_p skindex_c promis_peer_rel_c promis_anxiety_c promis_depression_c external_stigma_c internal_stigma_c"
-
+//local survey_list = "promis_peer_rel_p promis_anxiety_p promis_depression_p external_stigma_p internal_stigma_p skindex_c promis_peer_rel_c promis_anxiety_c promis_depression_c external_stigma_c internal_stigma_c"
+local survey_list = "anx_TScore child_depression_TScore child_peer_TScore skindex_teen_total proxy_anx_TScore proxy_dep_TScore proxy_peer_rx_TScore"
 
 // Child surveys
 //--------------------------------------

@@ -1,6 +1,7 @@
 cd "C:\Users\Brian\Documents\Stigma\"
 include "Header.do"
 local HIGH_STIGMA = 55
+matrix  result_matrix = [0,0]
 //-----------------------------------
 
 //convert to stata format for merging
@@ -37,7 +38,7 @@ reshape long tscore, i(pin) j(type)
 gen type_label = ""
 replace type_label = "Internal_c" if type == 1
 replace type_label = "External_c" if type == 2
-drop type
+ren type tscore_type
 ren type_label type
 
 //DROP_--------------------
@@ -102,8 +103,24 @@ logit high_stigma i.age_group i.visible_code i.male i.white if type == "External
 logit high_stigma i.age_group i.visible_code i.male i.white if type == "Internal_c"
 
 ren pin id
-merge 1:1 id using tscores
+merge m:1 id using tscores, keep(3)
+drop _merge
 
+
+local stigma_type = "Internal_c External_c"
+foreach stigma of local stigma_type {
+	foreach survey_var of local survey_list {
+		spearman `survey_var' tscore if type == "`stigma'"
+		matrix result_matrix = result_matrix \ r(rho) , r(p)
+	}
+}
+
+matrix list result_matrix
+
+drop type
+reshape wide tscore high_stigma , i(id) j(tscore_type)
+gen tscore_ratio = tscore1 / tscore2
+gen tscore_diff = tscore1 - tscore2
 
 save child, replace
 
