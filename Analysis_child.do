@@ -11,15 +11,22 @@ save scored_internal_child, replace
 import delimited using "scored_external_child.csv", clear varnames(5)
 save scored_external_child, replace
 
+import delimited using "scored_internal_proxy.csv", clear varnames(5)
+save scored_internal_proxy, replace
+
+import delimited using "scored_external_proxy.csv", clear varnames(5)
+save scored_external_proxy, replace
+
 //open the original file
 //skin problem 1 is the primary condition that is used to categorize
 import excel using "C:\Users\Brian\Documents\Stigma\raw.xlsx", sheet("All Data") firstrow clear
-keep id race skindiseasebuckets skin_problem_1 skin_problem_1_visible `date_vars' gender 
+keep id race skindiseasebuckets skin_problem_1 skin_problem_1_visible `date_vars' gender bullied 
 
 //clean the names of diseases
 //remove white space and slashses
 replace skindiseasebuckets = ustrregexra(skindiseasebuckets, " ", "")
 replace skindiseasebuckets = ustrregexra(skindiseasebuckets, "/", "")
+ren skin_problem_1_visible visibility
 
 egen disease_code = group(skindiseasebuckets)
 
@@ -27,37 +34,27 @@ egen disease_code = group(skindiseasebuckets)
 ren id pin
 merge 1:1 pin using scored_internal_child, keepusing(tscore) keep(3)
 drop _merge
-ren tscore tscore1
+ren tscore tscore_internal_c
 
 merge 1:1 pin using scored_external_child, keepusing(tscore) keep(3)
 drop _merge
-ren tscore tscore2
+ren tscore tscore_external_c
 
-//reformat data to be friendly to t-test and ranksum
-reshape long tscore, i(pin) j(type)
-gen type_label = ""
-replace type_label = "Internal_c" if type == 1
-replace type_label = "External_c" if type == 2
-ren type tscore_type
-ren type_label type
+merge 1:1 pin using scored_internal_proxy, keepusing(tscore) keep(3)
+drop _merge
+ren tscore tscore_internal_p
 
-//DROP_--------------------
-//keep if age_group 
+merge 1:1 pin using scored_external_proxy, keepusing(tscore) keep(3)
+drop _merge
+ren tscore tscore_external_p
 
-//iterate over all diseases and do testing
-matrix results = J(22, 2, .)
-
-forval i = 1 / 22 {
-    capture quietly ranksum tscore if disease_code == `i', by(type)
-	matrix results[`i', 1] = `i'
-	matrix results[`i', 2] = r(p)
-}
-
-// Output results in the format "Disease - p value"
-forval i = 1 / 22 {
-    local disease = results[`i', 1]
-    display "`disease' - " matrix(results[`i', 2])
-}
+//-----------------------------------------------------------------------
+// GENERATING VARIABLES
+//calculate tscore derivatives
+gen tscore_ratio_c = tscore_internal_c / tscore_external_c
+gen tscore_diff_c = tscore_internal_c - tscore_external_c
+gen tscore_ratio_p = tscore_internal_p / tscore_external_p
+gen tscore_diff_p = tscore_internal_p - tscore_external_p
 
 //age stuff
 ren birthdate_year birth_year
@@ -70,21 +67,11 @@ gen age = floor((survey_start_date - birthdate_full) / 365)
 gen age_group = 1 if age < 13
 replace age_group = 2 if age_group == .
 
-// stats by age
-quietly ranksum tscore if age_group == 1, by(type)
-disp r(p)
-quietly ranksum tscore if age_group == 2, by(type)
-disp r(p)
-
-// stats by sex
-ranksum tscore if gender == "female", by(type)
-ranksum tscore if gender == "male", by(type)
-
 // Assign numeric codes based on string values
 // by default, will assign semi-visible = 1 and invisible = 2. swap these
-egen visible_code = group(skin_problem_1_visible)
-replace visible_code = 1 if skin_problem_1_visible == "Not visible"
-replace visible_code = 2 if skin_problem_1_visible == "Barely covered by clothing"
+egen visible_code = group(visibility)
+replace visible_code = 1 if visibility == "Not visible"
+replace visible_code = 2 if visibility == "Barely covered by clothing"
 
 // Assign numberic codes for race
 // Split is white v not white
@@ -92,35 +79,46 @@ gen white = 1 if race == "White"
 replace white = 0 if white == .
 
 //generate var for high stigma
-gen high_stigma = 1 if tscore > `HIGH_STIGMA'
-replace high_stigma = 0 if high_stigma == .
+gen high_stigma_c = 1 if tscore_internal_c > `HIGH_STIGMA' | tscore_external_c > `HIGH_STIGMA'
+replace high_stigma_c = 0 if high_stigma_c == .
+gen high_stigma_p = 1 if tscore_internal_p > `HIGH_STIGMA' | tscore_external_p > `HIGH_STIGMA'
+replace high_stigma_p = 0 if high_stigma_p == .
 
-//generate numberical code for male
+//generate numerical code for male
 gen male = 1 if gender == "male"
 replace male = 0 if male == .
 
-logit high_stigma i.age_group i.visible_code i.male i.white if type == "External_c"
-logit high_stigma i.age_group i.visible_code i.male i.white if type == "Internal_c"
+//generate flag variables for linear regression
+gen racevar_White = (race == "White")
+gen racevar_NotWhite = (race != "White")
+gen racevar_Asian = (race == "Asian")
+gen racevar_Other = (race == "Other")
+gen racevar_Black = (race == "Black, African American, African, or Afro-Caribbean")
+gen racevar_NativeAmerican = (race == "American Indian, Native American or Alaskan Native")
+gen racevar_PacificIslander = (race == "Native Hawaiian or other Pacific Islander")
+
+gen visibilityvar_NotVisible = (visibility == "Not visible")
+gen visibilityvar_VeryVisible = (visibility == "Very visible")
+gen visibilityvar_BarelyCovered = (visibility == "Barely covered by clothing")
 
 ren pin id
 merge m:1 id using tscores, keep(3)
 drop _merge
 
+//-----------------------------------------------------------------------
+//STATS
+//logit high_stigma i.age_group i.visible_code i.male i.white if type == "External_c"
+//logit high_stigma i.age_group i.visible_code i.male i.white if type == "Internal_c"
 
-local stigma_type = "Internal_c External_c"
-foreach stigma of local stigma_type {
-	foreach survey_var of local survey_list {
-		spearman `survey_var' tscore if type == "`stigma'"
-		matrix result_matrix = result_matrix \ r(rho) , r(p)
-	}
+include "Logistic_regressions.do"
+include "Linear_regression.do"
+
+foreach survey_var of local survey_list {
+	spearman `survey_var' tscore if type == "`stigma'"
+	matrix result_matrix = result_matrix \ r(rho) , r(p)
 }
 
-matrix list result_matrix
 
-drop type
-reshape wide tscore high_stigma , i(id) j(tscore_type)
-gen tscore_ratio = tscore1 / tscore2
-gen tscore_diff = tscore1 - tscore2
 
 save child, replace
 
