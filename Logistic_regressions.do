@@ -4,6 +4,10 @@ local q25 = r(p25)
 local q50 = r(p50)
 local q75 = r(p75)
 
+//coming into this script, these vars are already defined as >55
+//recalculating based on percentiles instead
+drop high_tscore_diff_c low_tscore_diff_c
+
 gen high_tscore_diff_c = 1 if tscore_diff_c >= `q75'
 replace high_tscore_diff_c = 0 if high_tscore_diff_c == .
 
